@@ -4,17 +4,17 @@ on:
   workflow_dispatch:
     inputs:
       service_name:
-        description: 'Service name'
         required: true
+        type: string
       team_owner:
-        description: 'Team owner'
         required: true
+        type: string
       environment:
-        description: 'Environment'
         required: true
+        type: string
       port_context:
-        description: 'Port context'
         required: false
+        type: string
 
 jobs:
   provision:
@@ -47,3 +47,19 @@ jobs:
         run: |
           echo "✅ Registering ${{ github.event.inputs.service_name }} in Port catalog"
           echo "✅ Service provisioning complete!"
+
+      - name: Report Success to Port
+        if: always()
+        run: |
+          CONTEXT='${{ github.event.inputs.port_context }}'
+          RUN_ID=$(echo $CONTEXT | python3 -c "import sys,json; print(json.load(sys.stdin).get('runId',''))" 2>/dev/null || echo "")
+          if [ -n "$RUN_ID" ]; then
+            TOKEN=$(curl -s -X POST 'https://api.port.io/v1/auth/access_token' \
+              -H 'Content-Type: application/json' \
+              -d '{"clientId":"${{ secrets.PORT_CLIENT_ID }}","clientSecret":"${{ secrets.PORT_CLIENT_SECRET }}"}' \
+              | python3 -c "import sys,json; print(json.load(sys.stdin)['accessToken'])")
+            curl -s -X PATCH "https://api.port.io/v1/actions/runs/$RUN_ID" \
+              -H "Authorization: Bearer $TOKEN" \
+              -H "Content-Type: application/json" \
+              -d '{"status":"SUCCESS","message":{"run_status":"Service provisioned successfully"}}'
+          fi
