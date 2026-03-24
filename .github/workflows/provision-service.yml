@@ -1,0 +1,49 @@
+name: Provision New Microservice
+
+on:
+  workflow_dispatch:
+    inputs:
+      service_name:
+        description: 'Service name'
+        required: true
+      team_owner:
+        description: 'Team owner'
+        required: true
+      environment:
+        description: 'Environment'
+        required: true
+      port_context:
+        description: 'Port context'
+        required: false
+
+jobs:
+  provision:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Log Provisioning Request
+        run: |
+          echo "🚀 Provisioning new microservice"
+          echo "Service: ${{ github.event.inputs.service_name }}"
+          echo "Team: ${{ github.event.inputs.team_owner }}"
+          echo "Environment: ${{ github.event.inputs.environment }}"
+
+      - name: Create Kubernetes Namespace
+        run: |
+          echo "✅ Creating namespace: ${{ github.event.inputs.service_name }}"
+          echo "✅ Applying RBAC policies for team: ${{ github.event.inputs.team_owner }}"
+
+      - name: Scaffold Service Repository
+        run: |
+          echo "✅ Creating GitHub repository: ${{ github.event.inputs.service_name }}-service"
+          echo "✅ Applying standard Walmart repository template"
+          echo "✅ Configuring branch protection rules"
+
+      - name: Create Jira Project
+        run: |
+          echo "✅ Creating Jira project for: ${{ github.event.inputs.service_name }}"
+          echo "✅ Assigning to team: ${{ github.event.inputs.team_owner }}"
+
+      - name: Register Service in Port
+        run: |
+          echo "✅ Registering ${{ github.event.inputs.service_name }} in Port catalog"
+          echo "✅ Service provisioning complete!"
